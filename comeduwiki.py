@@ -166,38 +166,6 @@ elif menu == "회원가입":
                 st.error(message)
 
 
-#wikipedia============================================================
-
-import wikipediaapi
-
-# 위키피디아 검색 함수
-def search_wikipedia(query):
-    try:
-        # 위키피디아 API 객체 생성
-        wiki = wikipediaapi.Wikipedia('ko')  # 한국어 위키피디아 사용
-        page = wiki.page(query)
-        return page if page.exists() else None
-    except Exception as e:
-        return None
-
-# 페이지 초기화
-st.title("위키피디아 검색 클론")
-st.write("위키피디아에서 원하는 주제를 검색해보세요!")
-
-# 검색어 입력
-query = st.text_input("검색어를 입력하세요:")
-
-if query:
-    # 검색 결과 가져오기
-    result = search_wikipedia(query)
-
-    # 검색 결과가 있을 경우
-    if result:
-        st.header(result.title)
-        st.write(result.summary[:500] + "...")  # 내용 일부 출력
-        st.write(f"[위키피디아에서 더 보기]({result.fullurl})")
-    else:
-        st.error("해당 검색어에 대한 결과를 찾을 수 없습니다.")
 
 
 #============================== 문서 데이터베이스
