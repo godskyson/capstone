@@ -258,50 +258,43 @@ conn.close()
 
 #+======================익명채팅
 
-import streamlit.components.v1 as components
+import streamlit as st
 from datetime import datetime
 import random
 
-# Store chat messages
+# 채팅 메시지 저장
 if 'messages' not in st.session_state:
     st.session_state['messages'] = []
 
-# Function to add a message to the chat
+# 채팅에 메시지를 추가하는 함수
 def add_message(username, text):
     if text.strip():
         st.session_state['messages'].append({'username': username, 'text': text, 'time': datetime.now().strftime('%H:%M:%S')})
 
-# Streamlit page configuration
-st.set_page_config(page_title="Anonymous Chat Room", layout='wide')
-st.title("Anonymous Chat Room")
+# Streamlit 페이지 설정
+st.set_page_config(page_title="익명 채팅방", layout='wide')
+st.title("익명 채팅방")
 
-# Username assignment - generate random usernames
+# 사용자 이름 할당 - 랜덤 사용자 이름 생성
 if 'username' not in st.session_state:
-    st.session_state['username'] = f"User{random.randint(1000, 9999)}"
+    st.session_state['username'] = f"사용자{random.randint(1000, 9999)}"
 
-# Chat area
-st.write("### Chat Messages")
+# 채팅 영역
+st.write("### 채팅 메시지")
 for message in st.session_state['messages']:
     st.write(f"[{message['time']}] {message['username']}: {message['text']}")
 
-# User input for new messages
+# 새로운 메시지 입력
 with st.form(key='chat_form', clear_on_submit=True):
-    user_input = st.text_input("Enter your message:", max_chars=200)
-    submit_button = st.form_submit_button(label='Send')
+    user_input = st.text_input("메시지를 입력하세요:", max_chars=200)
+    submit_button = st.form_submit_button(label='전송')
     if submit_button and user_input:
         add_message(st.session_state['username'], user_input)
+        st.experimental_rerun()
 
-# Option to clear chat
-if st.button('Clear Chat'):
+# 채팅 지우기 옵션
+if st.button('채팅 지우기'):
     st.session_state['messages'] = []
-
-# Embed to make it look like a chat widget
-temp_html = """
-<script>
-    var msgContainer = document.querySelectorAll('div.element-container')[0];
-    if (msgContainer) msgContainer.scrollTop = msgContainer.scrollHeight;
-</script>
-"""
-components.html(temp_html, height=0)  # Embed empty HTML with JavaScript to auto-scroll
+    st.experimental_rerun()
 
 
