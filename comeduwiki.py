@@ -306,7 +306,7 @@ if 'fetch_thread_started' not in st.session_state:
     st.session_state['fetch_thread_started'] = True
 
 # Streamlit 페이지 설정
-st.set_page_config(page_title="익명 채팅방", layout='wide')
+st.set_page_config(page_title="익명 채팅방", layout="wide")
 st.title("익명 채팅방")
 
 # 채팅 영역
