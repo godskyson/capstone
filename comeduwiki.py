@@ -290,11 +290,11 @@ with st.form(key='chat_form', clear_on_submit=True):
     submit_button = st.form_submit_button(label='전송')
     if submit_button and user_input:
         add_message(st.session_state['username'], user_input)
-        st.experimental_rerun()
+        st.rerun()
 
 # 채팅 지우기 옵션
 if st.button('채팅 지우기'):
     st.session_state['messages'] = []
-    st.experimental_rerun()
+    st.rerun()
 
 
