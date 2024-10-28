@@ -262,75 +262,43 @@ conn.close()
 
 #+======================익명채팅
 
-from datetime import datetime
-import random
-import requests
-import threading
+import firebase_admin
+from firebase_admin import credentials, db
 import time
 
-# 서버 URL 설정 (예: 로컬 서버)
-SERVER_URL = "http://localhost:8000"
+# Firebase 설정 초기화
+cred = credentials.Certificate("path/to/your-firebase-credentials.json")
+firebase_admin.initialize_app(cred, {
+    'databaseURL': 'https://your-database-name.firebaseio.com'
+})
 
-# 채팅 메시지 저장
-if 'messages' not in st.session_state:
-    st.session_state['messages'] = []
+# 채팅 메세지를 저장할 경로 설정
+chat_ref = db.reference('chat')
 
-# 사용자 이름 할당 - 랜덤 사용자 이름 생성
-if 'username' not in st.session_state:
-    st.session_state['username'] = f"사용자{random.randint(1000, 9999)}"
+# Streamlit 사용자 인터페이스 정의
+def main():
+    st.title("실시간 채팅")
 
-# 서버에서 메시지를 가져오는 함수
-def fetch_messages():
-    try:
-        response = requests.get(f"{SERVER_URL}/messages")
-        if response.status_code == 200:
-            st.session_state['messages'] = response.json()
-    except requests.exceptions.RequestException as e:
-        st.error("서버와 통신할 수 없습니다.")
+    username = st.text_input("사용자 이름", "")
+    message = st.text_input("메시지를 입력하세요", "")
 
-# 메시지를 서버로 보내는 함수
-def send_message(username, text):
-    try:
-        requests.post(f"{SERVER_URL}/messages", json={'username': username, 'text': text})
-    except requests.exceptions.RequestException as e:
-        st.error("메시지를 서버로 보낼 수 없습니다.")
+    if st.button("보내기"):
+        if username and message:
+            chat_ref.push({
+                'username': username,
+                'message': message,
+                'timestamp': time.time()
+            })
 
-# 실시간으로 서버에서 메시지를 가져오는 스레드 시작
-def start_fetching_messages():
-    def run():
-        while True:
-            fetch_messages()
-            time.sleep(2)
+    st.write("### 채팅 기록")
 
-    fetch_thread = threading.Thread(target=run, daemon=True)
-    fetch_thread.start()
+    messages = chat_ref.order_by_child('timestamp').get()
+    if messages:
+        for key, value in messages.items():
+            st.write(f"{value['username']}: {value['message']}")
 
-if 'fetch_thread_started' not in st.session_state:
-    start_fetching_messages()
-    st.session_state['fetch_thread_started'] = True
+if __name__ == "__main__":
+    main()
 
-# Streamlit 페이지 설정
-
-# 채팅 영역
-st.write("### 채팅 메시지")
-for message in st.session_state['messages']:
-    st.write(f"[{message['time']}] {message['username']}: {message['text']}")
-
-# 새로운 메시지 입력
-with st.form(key='chat_form', clear_on_submit=True):
-    user_input = st.text_input("메시지를 입력하세요:", max_chars=200)
-    submit_button = st.form_submit_button(label='전송')
-    if submit_button and user_input:
-        send_message(st.session_state['username'], user_input)
-        st.rerun()
-
-# 채팅 지우기 옵션
-if st.button('채팅 지우기'):
-    try:
-        requests.delete(f"{SERVER_URL}/messages")
-        st.session_state['messages'] = []
-        st.rerun()
-    except requests.exceptions.RequestException as e:
-        st.error("채팅 메시지를 지울 수 없습니다.")
 
 
