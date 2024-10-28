@@ -258,53 +258,50 @@ conn.close()
 
 #+======================익명채팅
 
-import streamlit as st
-import time
+import streamlit.components.v1 as components
 from datetime import datetime
 import random
 
-# 채팅 메시지 저장 리스트
-def load_chat_messages():
-    if "messages" not in st.session_state:
-        st.session_state["messages"] = []
-    return st.session_state["messages"]
+# Store chat messages
+if 'messages' not in st.session_state:
+    st.session_state['messages'] = []
 
-def add_chat_message(username, message):
-    chat_messages = load_chat_messages()
-    chat_messages.append({
-        "username": username,
-        "message": message,
-        "time": datetime.now().strftime("%H:%M:%S")
-    })
-    st.session_state["messages"] = chat_messages
+# Function to add a message to the chat
+def add_message(username, text):
+    if text.strip():
+        st.session_state['messages'].append({'username': username, 'text': text, 'time': datetime.now().strftime('%H:%M:%S')})
 
-# Streamlit 애플리케이션 설정
-def main():
-    st.title("메인 애플리케이션")
+# Streamlit page configuration
+st.set_page_config(page_title="Anonymous Chat Room", layout='wide')
+st.title("Anonymous Chat Room")
 
-    # 채팅 위젯
-    with st.sidebar.expander("익명 채팅", expanded=True):
-        # 사용자 이름 설정
-        if "username" not in st.session_state:
-            st.session_state["username"] = st.text_input("가상 닉네임을 입력하세요:", value=f"User_{random.randint(1000, 9999)}")
+# Username assignment - generate random usernames
+if 'username' not in st.session_state:
+    st.session_state['username'] = f"User{random.randint(1000, 9999)}"
 
-        username = st.session_state["username"]
-        st.write(f"당신의 사용자 이름: {username}")
+# Chat area
+st.write("### Chat Messages")
+for message in st.session_state['messages']:
+    st.write(f"[{message['time']}] {message['username']}: {message['text']}")
 
-        # 채팅 입력창
-        user_message = st.text_input("메시지 입력", "")
+# User input for new messages
+with st.form(key='chat_form', clear_on_submit=True):
+    user_input = st.text_input("Enter your message:", max_chars=200)
+    submit_button = st.form_submit_button(label='Send')
+    if submit_button and user_input:
+        add_message(st.session_state['username'], user_input)
 
-        if st.button("전송") and user_message:
-            add_chat_message(username, user_message)
-            st.rerun()
+# Option to clear chat
+if st.button('Clear Chat'):
+    st.session_state['messages'] = []
 
-        # 채팅 메시지 출력
-        st.subheader("채팅방")
-        chat_messages = load_chat_messages()
-        with st.container():
-            for chat in chat_messages[-7:]:
-                st.write(f"[{chat['time']}] {chat['username']}: {chat['message']}")
+# Embed to make it look like a chat widget
+temp_html = """
+<script>
+    var msgContainer = document.querySelectorAll('div.element-container')[0];
+    if (msgContainer) msgContainer.scrollTop = msgContainer.scrollHeight;
+</script>
+"""
+components.html(temp_html, height=0)  # Embed empty HTML with JavaScript to auto-scroll
 
-if __name__ == "__main__":
-    main()
 
