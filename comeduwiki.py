@@ -21,53 +21,53 @@ if menu == "메인":
     st.title("메인 페이지")
     st.write("이곳은 메인 페이지입니다. 다양한 정보를 확인할 수 있습니다.")
 
-import credentials, db
-import time
-
-# Firebase 설정 초기화
-cred = credentials.Certificate("path/to/your-firebase-credentials.json")
-firebase_admin.initialize_app(cred, {
-    'databaseURL': 'https://your-database-name.firebaseio.com'
-})
-
-# 문서 데이터를 저장할 경로 설정
-doc_ref = db.reference('documents')
-
-# Streamlit 사용자 인터페이스 정의
 def main():
-    st.title("문서 편집하기")
-
-    if st.button("문서 편집하기"):
-        st.session_state.edit_mode = True
-
+    st.title("사용자 문서 관리 페이지")
+    
     if 'edit_mode' not in st.session_state:
         st.session_state.edit_mode = False
 
     if st.session_state.edit_mode:
-        with st.form("edit_form"):
-            name = st.text_input("이름")
-            age = st.text_input("나이")
-            mbti = st.text_input("MBTI")
-            education = st.text_input("학력")
+        edit_document()
+    else:
+        show_document()
 
-            submitted = st.form_submit_button("저장하기")
-            if submitted:
-                if name and age and mbti and education:
-                    doc_ref.push({
-                        'name': name,
-                        'age': age,
-                        'mbti': mbti,
-                        'education': education,
-                        'timestamp': time.time()
-                    })
-                    st.success("저장되었습니다!")
-                    st.session_state.edit_mode = False
+def show_document():
+    st.header("사용자 정보")
+    
+    # 기본 사용자 정보 표시
+    name = st.session_state.get('name', '홍길동')
+    age = st.session_state.get('age', 30)
+    education = st.session_state.get('education', '대학교 졸업')
+    hobby = st.session_state.get('hobby', '등산')
+    
+    st.write(f"**이름:** {name}")
+    st.write(f"**나이:** {age}")
+    st.write(f"**학력:** {education}")
+    st.write(f"**취미:** {hobby}")
+    
+    if st.button("문서 편집하기"):
+        st.session_state.edit_mode = True
 
-    st.write("### 저장된 문서 목록")
-    documents = doc_ref.order_by_child('timestamp').get()
-    if documents:
-        for key, value in documents.items():
-            st.write(f"이름: {value['name']}, 나이: {value['age']}, MBTI: {value['mbti']}, 학력: {value['education']}")
+
+def edit_document():
+    st.header("문서 편집하기")
+    
+    # 사용자 정보 수정 가능
+    name = st.text_input("이름", st.session_state.get('name', '홍길동'))
+    age = st.number_input("나이", min_value=0, max_value=120, value=st.session_state.get('age', 30))
+    education = st.text_input("학력", st.session_state.get('education', '대학교 졸업'))
+    hobby = st.text_input("취미", st.session_state.get('hobby', '등산'))
+    
+    if st.button("저장하기"):
+        st.session_state.name = name
+        st.session_state.age = age
+        st.session_state.education = education
+        st.session_state.hobby = hobby
+        st.session_state.edit_mode = False
+    
+    if st.button("취소"):
+        st.session_state.edit_mode = False
 
 if __name__ == "__main__":
     main()
