@@ -1,6 +1,6 @@
 import streamlit as st
 
-st.set_page_config(page_title="익명 채팅방", layout="wide")
+st.set_page_config(page_title="요의정고등학교", layout="wide")
 st.title("익명 채팅방")
 
 
