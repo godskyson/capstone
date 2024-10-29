@@ -415,43 +415,54 @@ conn.close()
 
 #+======================익명채팅
 
-import firebase_admin
-from firebase_admin import credentials, db
+import streamlit as st
 import time
+from datetime import datetime
+import random
 
-# Firebase 설정 초기화
-cred = credentials.Certificate("path/to/your-firebase-credentials.json")
-firebase_admin.initialize_app(cred, {
-    'databaseURL': 'https://your-database-name.firebaseio.com'
-})
+# 채팅 메시지 저장 리스트
+def load_chat_messages():
+    if "messages" not in st.session_state:
+        st.session_state["messages"] = []
+    return st.session_state["messages"]
 
-# 채팅 메세지를 저장할 경로 설정
-chat_ref = db.reference('chat')
+def add_chat_message(username, message):
+    chat_messages = load_chat_messages()
+    chat_messages.append({
+        "username": username,
+        "message": message,
+        "time": datetime.now().strftime("%H:%M:%S")
+    })
+    st.session_state["messages"] = chat_messages
 
-# Streamlit 사용자 인터페이스 정의
+# Streamlit 애플리케이션 설정
 def main():
-    st.title("실시간 채팅")
+    st.title("메인 애플리케이션")
 
-    username = st.text_input("사용자 이름", "")
-    message = st.text_input("메시지를 입력하세요", "")
+    # 채팅 위젯
+    with st.sidebar.expander("익명 채팅", expanded=True):
+        # 사용자 이름 설정
+        if "username" not in st.session_state:
+            st.session_state["username"] = st.text_input("가상 닉네임을 입력하세요:", value=f"User_{random.randint(1000, 9999)}")
 
-    if st.button("보내기"):
-        if username and message:
-            chat_ref.push({
-                'username': username,
-                'message': message,
-                'timestamp': time.time()
-            })
+        username = st.session_state["username"]
+        st.write(f"당신의 사용자 이름: {username}")
 
-    st.write("### 채팅 기록")
+        # 채팅 입력창
+        user_message = st.text_input("메시지 입력", "")
 
-    messages = chat_ref.order_by_child('timestamp').get()
-    if messages:
-        for key, value in messages.items():
-            st.write(f"{value['username']}: {value['message']}")
+        if st.button("전송") and user_message:
+            add_chat_message(username, user_message)
+            st.rerun()
+
+        # 채팅 메시지 출력
+        st.subheader("채팅방")
+        chat_messages = load_chat_messages()
+        with st.container():
+            for chat in chat_messages[-7:]:
+                st.write(f"[{chat['time']}] {chat['username']}: {chat['message']}")
 
 if __name__ == "__main__":
     main()
-
 
 
