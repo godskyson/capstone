@@ -21,44 +21,95 @@ if menu == "메인":
     st.title("메인 페이지")
     st.write("이곳은 메인 페이지입니다. 다양한 정보를 확인할 수 있습니다.")
 
-# 문서 페이지
-# 문서 저장 리스트
-def load_documents():
-    if "documents" not in st.session_state:
-        st.session_state["documents"] = ["기본 문서 내용"]
-    return st.session_state["documents"]
+import credentials, db
+import time
 
-def update_document(index, new_content):
-    documents = load_documents()
-    documents[index] = new_content
-    st.session_state["documents"] = documents
+# Firebase 설정 초기화
+cred = credentials.Certificate("path/to/your-firebase-credentials.json")
+firebase_admin.initialize_app(cred, {
+    'databaseURL': 'https://your-database-name.firebaseio.com'
+})
 
-# Streamlit 애플리케이션 설정
+# 문서 데이터를 저장할 경로 설정
+doc_ref = db.reference('documents')
+
+# Streamlit 사용자 인터페이스 정의
 def main():
-    st.title("메인 애플리케이션")
+    st.title("문서 편집하기")
 
-    # 문서 편집 기능
-    st.header("문서 편집")
-    documents = load_documents()
+    if st.button("문서 편집하기"):
+        st.session_state.edit_mode = True
 
-    for i, doc in enumerate(documents):
-        if f"is_editing_{i}" not in st.session_state:
-            st.session_state[f"is_editing_{i}"] = False
+    if 'edit_mode' not in st.session_state:
+        st.session_state.edit_mode = False
 
-        if st.session_state[f"is_editing_{i}"]:
-            new_content = st.text_area(f"문서 {i + 1} 편집", value=doc, key=f"edit_area_{i}")
-            if st.button("저장", key=f"save_button_{i}"):
-                update_document(i, new_content)
-                st.session_state[f"is_editing_{i}"] = False
-                st.rerun()
-        else:
-            st.write(f"문서 {i + 1}: {doc}")
-            if st.button("편집", key=f"edit_button_{i}"):
-                st.session_state[f"is_editing_{i}"] = True
-                st.rerun()
+    if st.session_state.edit_mode:
+        with st.form("edit_form"):
+            name = st.text_input("이름")
+            age = st.text_input("나이")
+            mbti = st.text_input("MBTI")
+            education = st.text_input("학력")
+
+            submitted = st.form_submit_button("저장하기")
+            if submitted:
+                if name and age and mbti and education:
+                    doc_ref.push({
+                        'name': name,
+                        'age': age,
+                        'mbti': mbti,
+                        'education': education,
+                        'timestamp': time.time()
+                    })
+                    st.success("저장되었습니다!")
+                    st.session_state.edit_mode = False
+
+    st.write("### 저장된 문서 목록")
+    documents = doc_ref.order_by_child('timestamp').get()
+    if documents:
+        for key, value in documents.items():
+            st.write(f"이름: {value['name']}, 나이: {value['age']}, MBTI: {value['mbti']}, 학력: {value['education']}")
 
 if __name__ == "__main__":
     main()
+
+# 문서 페이지
+# 문서 저장 리스트
+# def load_documents():
+#     if "documents" not in st.session_state:
+#         st.session_state["documents"] = ["기본 문서 내용"]
+#     return st.session_state["documents"]
+
+# def update_document(index, new_content):
+#     documents = load_documents()
+#     documents[index] = new_content
+#     st.session_state["documents"] = documents
+
+# Streamlit 애플리케이션 설정
+# def main():
+#     st.title("메인 애플리케이션")
+
+#     # 문서 편집 기능
+#     st.header("문서 편집")
+#     documents = load_documents()
+
+#     for i, doc in enumerate(documents):
+#         if f"is_editing_{i}" not in st.session_state:
+#             st.session_state[f"is_editing_{i}"] = False
+
+#         if st.session_state[f"is_editing_{i}"]:
+#             new_content = st.text_area(f"문서 {i + 1} 편집", value=doc, key=f"edit_area_{i}")
+#             if st.button("저장", key=f"save_button_{i}"):
+#                 update_document(i, new_content)
+#                 st.session_state[f"is_editing_{i}"] = False
+#                 st.rerun()
+#         else:
+#             st.write(f"문서 {i + 1}: {doc}")
+#             if st.button("편집", key=f"edit_button_{i}"):
+#                 st.session_state[f"is_editing_{i}"] = True
+#                 st.rerun()
+
+# if __name__ == "__main__":
+#     main()
 
 
 
