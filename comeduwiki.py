@@ -14,7 +14,8 @@ st.sidebar.title("요의정고등학교")
 import streamlit as st
 
 # 사이드바 메뉴 설정
-menu = st.sidebar.radio("메뉴", ("메인", "문서", "로그인"))
+#menu = st.sidebar.radio("메뉴", ("메인", "문서", "로그인"))
+menu = st.sidebar.radio("메뉴", ("메인", "문서", "로그인", "회원가입"))
 
 # 메인 페이지
 if menu == "메인":
@@ -128,7 +129,7 @@ if "username" not in st.session_state:
     st.session_state.username = ""
 
 # 사이드바 메뉴 설정
-menu = st.sidebar.radio("메뉴", ("메인", "문서", "로그인", "회원가입"))
+
 
 # 사이드바에 로그인 상태 표시
 if st.session_state.logged_in:
