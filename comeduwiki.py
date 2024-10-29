@@ -1,7 +1,7 @@
 import streamlit as st
 
 st.set_page_config(page_title="요의정고등학교 위키", layout="wide")
-st.title("익명 채팅방")
+
 
 
 # 사이드바에 로고 이미지 추가
