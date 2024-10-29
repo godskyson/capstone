@@ -14,7 +14,7 @@ st.sidebar.title("요의정고등학교")
 import streamlit as st
 
 # 사이드바 메뉴 설정
-menu = st.sidebar.radio("메뉴", ("메인", "문서", "로그인"))
+
 
 # 메인 페이지
 if menu == "메인":
