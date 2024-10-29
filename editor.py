@@ -91,11 +91,12 @@ choice = st.sidebar.selectbox("메뉴 선택", menu)
 if st.session_state.logged_in:
     if choice == "게시글 작성":
         st.subheader("새 게시글 작성")
+        author = st.text_input("작성자 이름", value=st.session_state.username)
         title = st.text_input("제목")
         content = st.text_area("내용")
         if st.button("게시글 올리기"):
             if title and content:
-                create_post(st.session_state.username, title, content)
+                create_post(author, title, content)
                 st.success("게시글이 성공적으로 등록되었습니다!")
             else:
                 st.error("제목과 내용을 모두 입력해주세요.")
