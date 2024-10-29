@@ -27,12 +27,8 @@ def register_user(username, password):
 
 # 게시글 작성 함수
 def create_post(username, title, content):
-    try:
-        c.execute('INSERT INTO posts (username, title, content) VALUES (?, ?, ?)', (username, title, content))
-        conn.commit()
-        st.success(f"게시물 '{title}'이(가) 저장되었습니다!")
-    except Exception as e:
-        st.error(f"게시물 저장 중 오류 발생: {e}")
+    c.execute('INSERT INTO posts (username, title, content) VALUES (?, ?, ?)', (username, title, content))
+    conn.commit()
 
 # 게시글 불러오기 함수
 def get_posts():
@@ -55,17 +51,22 @@ if 'username' not in st.session_state:
 
 # 로그인 및 로그아웃 기능
 if not st.session_state.logged_in:
-    st.subheader("회원가입")
-    new_username = st.text_input("새 사용자 이름", key="new_username")
-    new_password = st.text_input("새 비밀번호", type="password", key="new_password")
-    if st.button("회원가입"):
-        if new_username and new_password:
-            if register_user(new_username, new_password):
-                st.success("회원가입이 성공적으로 완료되었습니다. 이제 로그인하세요.")
-            else:
-                st.error("이미 존재하는 사용자 이름입니다. 다른 이름을 선택해주세요.")
-        else:
-            st.error("사용자 이름과 비밀번호를 모두 입력해주세요.")
+    if st.button("회원가입", key="open_register_window"):
+        st.session_state.show_register = True
+
+    if 'show_register' in st.session_state and st.session_state.show_register:
+        with st.expander("회원가입 창", expanded=True):
+            new_username = st.text_input("새 사용자 이름", key="new_username")
+            new_password = st.text_input("새 비밀번호", type="password", key="new_password")
+            if st.button("회원가입 완료", key="register_user"):
+                if new_username and new_password:
+                    if register_user(new_username, new_password):
+                        st.success("회원가입이 성공적으로 완료되었습니다. 이제 로그인하세요.")
+                        st.session_state.show_register = False
+                    else:
+                        st.error("이미 존재하는 사용자 이름입니다. 다른 이름을 선택해주세요.")
+                else:
+                    st.error("사용자 이름과 비밀번호를 모두 입력해주세요.")
 
     st.subheader("로그인")
     username = st.text_input("사용자 이름")
