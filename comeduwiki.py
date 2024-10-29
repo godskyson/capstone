@@ -1,4 +1,6 @@
 import streamlit as st
+import sqlite3
+import pandas as pd
 
 st.set_page_config(page_title="요의정고등학교 위키", layout="wide")
 
@@ -18,21 +20,13 @@ import streamlit as st
 menu = st.sidebar.radio("메뉴", ("메인", "문서", "로그인", "회원가입"))
 
 # 메인 페이지
-if menu == "메인":
-    st.title("메인 페이지")
-    st.write("이곳은 메인 페이지입니다. 다양한 정보를 확인할 수 있습니다.")
+# if menu == "메인":
+#     st.title("메인 페이지")
+#     st.write("이곳은 메인 페이지입니다. 다양한 정보를 확인할 수 있습니다.")
 
 
 
 
-
-
-
-
-# 문서 페이지
-import streamlit as st
-import sqlite3
-import pandas as pd
 
 # SQLite 데이터베이스 설정
 conn = sqlite3.connect('posts.db')
