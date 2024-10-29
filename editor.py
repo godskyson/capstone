@@ -29,6 +29,9 @@ def register_user(username, password):
 def create_post(username, title, content):
     c.execute('INSERT INTO posts (username, title, content) VALUES (?, ?, ?)', (username, title, content))
     conn.commit()
+    st.success(f"게시물 '{title}'이(가) 저장되었습니다!")
+    except Exception as e:
+        st.error(f"게시물 저장 중 오류 발생: {e}")
 
 # 게시글 불러오기 함수
 def get_posts():
