@@ -19,6 +19,57 @@ import streamlit as st
 #menu = st.sidebar.radio("메뉴", ("메인", "문서", "로그인"))
 menu = st.sidebar.radio("메뉴", ("메인", "문서", "로그인", "회원가입"))
 
+if menu == "메인":
+    if st.session_state.logged_in:
+        st.title("메인 페이지")
+        st.write("환영합니다! 다양한 정보를 확인할 수 있습니다.")
+    else:
+        st.warning("로그인이 필요합니다. 사이드바에서 로그인 페이지로 이동하세요.")
+
+# 문서 페이지
+elif menu == "문서":
+    if st.session_state.logged_in:
+        st.title("문서 페이지")
+        st.write("여기는 문서 페이지입니다. 다양한 문서와 자료를 열람할 수 있습니다.")
+    else:
+        st.warning("로그인이 필요합니다. 사이드바에서 로그인 페이지로 이동하세요.")
+
+# 로그인 페이지
+elif menu == "로그인":
+    st.title("로그인 페이지")
+
+    if not st.session_state.logged_in:
+        username = st.text_input("아이디", key="login_username")
+        password = st.text_input("비밀번호", type="password", key="login_password")
+        
+        if st.button("로그인"):
+            success, message = login(username, password)
+            if success:
+                st.success(message)
+                st.rerun()  # 로그인 후 페이지 새로고침
+            else:
+                st.error(message)
+
+# 회원가입 페이지
+elif menu == "회원가입":
+    st.title("회원가입 페이지")
+
+    new_username = st.text_input("아이디", key="signup_username")
+    new_password = st.text_input("비밀번호", type="password", key="signup_password")
+    confirm_password = st.text_input("비밀번호 확인", type="password", key="signup_confirm_password")
+
+    if st.button("회원가입"):
+        if new_password != confirm_password:
+            st.error("비밀번호가 일치하지 않습니다.")
+        elif new_username == "" or new_password == "":
+            st.error("아이디와 비밀번호를 모두 입력하세요.")
+        else:
+            success, message = signup(new_username, new_password)
+            if success:
+                st.success(message)
+            else:
+                st.error(message)
+
 # 메인 페이지
 # if menu == "메인":
 #     st.title("메인 페이지")
@@ -135,56 +186,6 @@ else:
     st.sidebar.write("로그인 페이지로 이동하세요.")
 
 # 메인 페이지
-if menu == "메인":
-    if st.session_state.logged_in:
-        st.title("메인 페이지")
-        st.write("환영합니다! 다양한 정보를 확인할 수 있습니다.")
-    else:
-        st.warning("로그인이 필요합니다. 사이드바에서 로그인 페이지로 이동하세요.")
-
-# 문서 페이지
-elif menu == "문서":
-    if st.session_state.logged_in:
-        st.title("문서 페이지")
-        st.write("여기는 문서 페이지입니다. 다양한 문서와 자료를 열람할 수 있습니다.")
-    else:
-        st.warning("로그인이 필요합니다. 사이드바에서 로그인 페이지로 이동하세요.")
-
-# 로그인 페이지
-elif menu == "로그인":
-    st.title("로그인 페이지")
-
-    if not st.session_state.logged_in:
-        username = st.text_input("아이디", key="login_username")
-        password = st.text_input("비밀번호", type="password", key="login_password")
-        
-        if st.button("로그인"):
-            success, message = login(username, password)
-            if success:
-                st.success(message)
-                st.rerun()  # 로그인 후 페이지 새로고침
-            else:
-                st.error(message)
-
-# 회원가입 페이지
-elif menu == "회원가입":
-    st.title("회원가입 페이지")
-
-    new_username = st.text_input("아이디", key="signup_username")
-    new_password = st.text_input("비밀번호", type="password", key="signup_password")
-    confirm_password = st.text_input("비밀번호 확인", type="password", key="signup_confirm_password")
-
-    if st.button("회원가입"):
-        if new_password != confirm_password:
-            st.error("비밀번호가 일치하지 않습니다.")
-        elif new_username == "" or new_password == "":
-            st.error("아이디와 비밀번호를 모두 입력하세요.")
-        else:
-            success, message = signup(new_username, new_password)
-            if success:
-                st.success(message)
-            else:
-                st.error(message)
 
 
 def create_database():
