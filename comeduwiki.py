@@ -232,13 +232,6 @@ def update_user_in_db(user_id, name, age, education, hobby):
     conn.close()
 
 
-
-
-
-if __name__ == "__main__":
-    main()
-
-
 #============================== 문서 데이터베이스
 
 import sqlite3
