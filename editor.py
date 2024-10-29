@@ -1,107 +1,104 @@
 import streamlit as st
 import sqlite3
-import hashlib
+import pandas as pd
 
-# 해시 함수 정의
-def make_hashes(password):
-    return hashlib.sha256(str.encode(password)).hexdigest()
+# SQLite 데이터베이스 설정
+conn = sqlite3.connect('posts.db', check_same_thread=False)
+c = conn.cursor()
 
-def check_hashes(password, hashed_text):
-    return make_hashes(password) == hashed_text
+# 테이블 생성 (없을 경우 생성)
+c.execute('''CREATE TABLE IF NOT EXISTS users (username TEXT PRIMARY KEY, password TEXT)''')
+c.execute('''CREATE TABLE IF NOT EXISTS posts (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, title TEXT, content TEXT)''')
+conn.commit()
 
-# 데이터베이스 연결 및 테이블 생성
-def create_user_table():
-    conn = sqlite3.connect('users.db')
-    c = conn.cursor()
-    c.execute('CREATE TABLE IF NOT EXISTS userstable(username TEXT, password TEXT)')
+# 사용자 인증 함수
+def authenticate_user(username, password):
+    c.execute('SELECT * FROM users WHERE username = ? AND password = ?', (username, password))
+    return c.fetchone()
+
+# 사용자 등록 함수
+def register_user(username, password):
+    try:
+        c.execute('INSERT INTO users (username, password) VALUES (?, ?)', (username, password))
+        conn.commit()
+        return True
+    except sqlite3.IntegrityError:
+        return False
+
+# 게시글 작성 함수
+def create_post(username, title, content):
+    c.execute('INSERT INTO posts (username, title, content) VALUES (?, ?, ?)', (username, title, content))
     conn.commit()
-    conn.close()
 
-def add_userdata(username, password):
-    conn = sqlite3.connect('users.db')
-    c = conn.cursor()
-    c.execute('INSERT INTO userstable(username, password) VALUES (?, ?)', (username, password))
+# 게시글 불러오기 함수
+def get_posts():
+    c.execute('SELECT * FROM posts')
+    return c.fetchall()
+
+# 게시글 삭제 함수
+def delete_post(post_id):
+    c.execute('DELETE FROM posts WHERE id = ?', (post_id,))
     conn.commit()
-    conn.close()
 
-def login_user(username, password):
-    conn = sqlite3.connect('users.db')
-    c = conn.cursor()
-    c.execute('SELECT * FROM userstable WHERE username =? AND password = ?', (username, password))
-    data = c.fetchall()
-    conn.close()
-    return data
+# Streamlit 앱 구성
+st.title("게시판 웹사이트")
 
-def create_post_table():
-    conn = sqlite3.connect('posts.db')
-    c = conn.cursor()
-    c.execute('CREATE TABLE IF NOT EXISTS poststable(author TEXT, post TEXT)')
-    conn.commit()
-    conn.close()
-
-def add_post(author, post):
-    conn = sqlite3.connect('posts.db')
-    c = conn.cursor()
-    c.execute('INSERT INTO poststable(author, post) VALUES (?, ?)', (author, post))
-    conn.commit()
-    conn.close()
-
-def view_all_posts():
-    conn = sqlite3.connect('posts.db')
-    c = conn.cursor()
-    c.execute('SELECT * FROM poststable')
-    data = c.fetchall()
-    conn.close()
-    return data
-
-# Streamlit 애플리케이션 시작
-st.title("게시글 작성 및 열람 웹 애플리케이션")
-
-# 데이터베이스 테이블 생성
-create_user_table()
-create_post_table()
-
-# 회원가입 및 로그인
-menu = ["로그인", "회원가입"]
-choice = st.sidebar.selectbox("메뉴", menu)
+menu = ["회원가입", "로그인", "게시글 작성", "게시글 열람"]
+choice = st.sidebar.selectbox("메뉴 선택", menu)
 
 if choice == "회원가입":
     st.subheader("회원가입")
-    new_user = st.text_input("사용자 이름")
-    new_password = st.text_input("비밀번호", type='password')
-
-    if st.button("회원가입"):
-        hashed_new_password = make_hashes(new_password)
-        add_userdata(new_user, hashed_new_password)
-        st.success("회원가입이 완료되었습니다!")
-        st.info("로그인 페이지에서 로그인하세요.")
+    new_username = st.text_input("사용자 이름")
+    new_password = st.text_input("비밀번호", type="password")
+    if st.button("회원가입 완료"):
+        if new_username and new_password:
+            if register_user(new_username, new_password):
+                st.success("회원가입이 성공적으로 완료되었습니다. 이제 로그인하세요.")
+            else:
+                st.error("이미 존재하는 사용자 이름입니다. 다른 이름을 선택해주세요.")
+        else:
+            st.error("사용자 이름과 비밀번호를 모두 입력해주세요.")
 
 elif choice == "로그인":
     st.subheader("로그인")
     username = st.text_input("사용자 이름")
-    password = st.text_input("비밀번호", type='password')
-
+    password = st.text_input("비밀번호", type="password")
     if st.button("로그인"):
-        hashed_password = make_hashes(password)
-        result = login_user(username, hashed_password)
-        if result:
-            st.success(f"{username}님, 환영합니다!")
-
-            # 게시글 작성 및 열람
-            task = st.selectbox("옵션 선택", ["글 작성하기", "글 열람하기"])
-            if task == "글 작성하기":
-                st.subheader("게시글 작성하기")
-                post_content = st.text_area("게시글 내용")
-                if st.button("게시글 업로드"):
-                    add_post(username, post_content)
-                    st.success("게시글이 업로드되었습니다.")
-
-            elif task == "글 열람하기":
-                st.subheader("게시글 열람하기")
-                posts = view_all_posts()
-                for post in posts:
-                    st.write(f"작성자: {post[0]}")
-                    st.write(f"내용: {post[1]}")
-                    st.write("---")
+        if authenticate_user(username, password):
+            st.session_state.logged_in = True
+            st.session_state.username = username
+            st.success(f"환영합니다, {username}님!")
         else:
-            st.warning("사용자 이름 또는 비밀번호가 일치하지 않습니다.")
+            st.error("사용자 이름 또는 비밀번호가 잘못되었습니다.")
+
+elif choice == "게시글 작성":
+    if 'logged_in' in st.session_state and st.session_state.logged_in:
+        st.subheader("새 게시글 작성")
+        title = st.text_input("제목")
+        content = st.text_area("내용")
+        if st.button("게시글 올리기"):
+            if title and content:
+                create_post(st.session_state.username, title, content)
+                st.success("게시글이 성공적으로 등록되었습니다!")
+            else:
+                st.error("제목과 내용을 모두 입력해주세요.")
+    else:
+        st.error("로그인이 필요합니다. 먼저 로그인 해주세요.")
+
+elif choice == "게시글 열람":
+    st.subheader("게시글 목록")
+    posts = get_posts()
+    if posts:
+        for post in posts:
+            st.markdown(f"### {post[2]} (작성자: {post[1]})")
+            st.write(post[2])
+            if 'logged_in' in st.session_state and post[1] == st.session_state.username:
+                if st.button("게시글 삭제", key=f"delete_{post[0]}"):
+                    delete_post(post[0])
+                    st.success("게시글이 삭제되었습니다.")
+            st.markdown("---")
+    else:
+        st.write("아직 등록된 게시글이 없습니다.")
+
+# 데이터베이스 연결 종료
+conn.close()
