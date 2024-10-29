@@ -91,7 +91,7 @@ elif choice == "게시글 열람":
     if posts:
         for post in posts:
             st.markdown(f"### {post[2]} (작성자: {post[1]})")
-            st.write(post[3])
+            st.write(post[2])
             if 'logged_in' in st.session_state and post[1] == st.session_state.username:
                 if st.button("게시글 삭제", key=f"delete_{post[0]}"):
                     delete_post(post[0])
