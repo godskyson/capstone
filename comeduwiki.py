@@ -32,22 +32,7 @@ def main():
     else:
         show_document()
 
-def show_document():
-    st.header("사용자 정보")
-    
-    # 기본 사용자 정보 표시
-    name = st.session_state.get('name', '홍길동')
-    age = st.session_state.get('age', 30)
-    education = st.session_state.get('education', '대학교 졸업')
-    hobby = st.session_state.get('hobby', '등산')
-    
-    st.write(f"**이름:** {name}")
-    st.write(f"**나이:** {age}")
-    st.write(f"**학력:** {education}")
-    st.write(f"**취미:** {hobby}")
-    
-    if st.button("문서 편집하기"):
-        st.session_state.edit_mode = True
+
 
 
 
@@ -328,90 +313,6 @@ if __name__ == "__main__":
 #============================== 문서 데이터베이스
 
 import sqlite3
-
-# 데이터베이스 연결 및 테이블 생성
-conn = sqlite3.connect("document_editor.db")
-c = conn.cursor()
-c.execute('''
-    CREATE TABLE IF NOT EXISTS documents (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        title TEXT UNIQUE,
-        content TEXT
-    )
-''')
-conn.commit()
-
-# 함수: 문서 저장
-def save_document(title, content):
-    try:
-        c.execute("INSERT OR IGNORE INTO documents (title, content) VALUES (?, ?)", (title, content))
-        conn.commit()
-        st.success(f"Document '{title}' saved successfully!")
-    except Exception as e:
-        st.error(f"Error saving document: {e}")
-
-# 함수: 문서 업데이트
-def update_document(title, new_content):
-    try:
-        c.execute("UPDATE documents SET content = ? WHERE title = ?", (new_content, title))
-        conn.commit()
-        st.success(f"Document '{title}' updated successfully!")
-    except Exception as e:
-        st.error(f"Error updating document: {e}")
-
-# 함수: 저장된 문서 불러오기
-def load_document_titles():
-    c.execute("SELECT title FROM documents")
-    return [row[0] for row in c.fetchall()]
-
-def load_document_content(title):
-    c.execute("SELECT content FROM documents WHERE title = ?", (title,))
-    result = c.fetchone()
-    return result[0] if result else ""
-
-# Streamlit UI
-st.title("Document Editor")
-
-# 메인 페이지에서 문서 선택
-st.header("Select or Create a Document")
-
-# 기존 문서 선택 옵션
-doc_titles = load_document_titles()
-selected_title = st.selectbox("Select an existing document to edit:", [""] + doc_titles)
-
-# 문서 제목 및 내용 입력 필드
-if selected_title:
-    # 선택된 문서 불러오기
-    title = selected_title
-    content = load_document_content(selected_title)
-    st.subheader(f"Editing Document: {selected_title}")
-else:
-    title = st.text_input("Enter Document Title")  # 새 문서 제목 입력 필드
-    content = ""  # 새 문서 내용 초기화
-
-# 문서 내용 입력 필드 (중앙)
-content = st.text_area("Document Content", content, height=300)
-
-# 문서 저장 및 업데이트 버튼
-col1, col2 = st.columns(2)  # 두 개의 버튼을 좌우로 나란히 배치
-
-with col1:
-    if st.button("Save Document"):
-        if title and content:
-            save_document(title, content)
-        else:
-            st.error("Please provide both a title and content.")
-
-with col2:
-    if st.button("Update Document"):
-        if title and content:
-            update_document(title, content)
-        else:
-            st.error("Please provide both a title and content.")
-
-# 연결 종료
-conn.close()
-
 
 #+======================익명채팅
 
