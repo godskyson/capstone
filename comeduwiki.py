@@ -1,10 +1,11 @@
 import streamlit as st
 import sqlite3
 import pandas as pd
+import json
+
+USER_DATA_FILE = "user_data.json"
 
 st.set_page_config(page_title="요의정고등학교 위키", layout="wide")
-
-
 
 # 사이드바에 로고 이미지 추가
 st.sidebar.image("logo.png", use_column_width=True)
@@ -12,8 +13,71 @@ st.sidebar.image("logo.png", use_column_width=True)
 # 사이드바에 학교 이름 텍스트 추가
 st.sidebar.title("요의정고등학교")
 
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
+if "username" not in st.session_state:
+    st.session_state.username = ""
+
+# 사용자 정보 저장 파일
+
+
+# 사용자 정보 파일 읽기
+try:
+    with open(USER_DATA_FILE, "r") as f:
+        users = json.load(f)
+except FileNotFoundError:
+    users = {}
+
+# 회원가입 함수
+def signup(username, password):
+    if username in users:
+        return False, "이미 존재하는 아이디입니다."
+    else:
+        users[username] = password
+        with open(USER_DATA_FILE, "w") as f:
+            json.dump(users, f)
+        return True, "회원가입에 성공했습니다."
+
+# 로그인 함수
+def login(username, password):
+    if username in users and users[username] == password:
+        st.session_state.logged_in = True
+        st.session_state.username = username
+        return True, "로그인에 성공했습니다."
+    else:
+        return False, "아이디 또는 비밀번호가 잘못되었습니다."
+
+# 로그아웃 함수
+def logout():
+    st.session_state.logged_in = False
+    st.session_state.username = ""
+
+# 로그인 상태 초기화
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
+if "username" not in st.session_state:
+    st.session_state.username = ""
+# 사용자 정보 저장 파일
+USER_DATA_FILE = "user_data.json"
+
+# 사용자 정보 파일 읽기
+try:
+    with open(USER_DATA_FILE, "r") as f:
+        users = json.load(f)
+except FileNotFoundError:
+    users = {}
 # 사이드바 메뉴 설정
-import streamlit as st
+
+
+# 사이드바에 로그인 상태 표시
+if st.session_state.logged_in:
+    st.sidebar.write(f"{st.session_state.username}님 환영합니다!")
+    if st.sidebar.button("로그아웃"):
+        logout()
+        st.rerun()  # 로그아웃 후 페이지 새로고침
+else:
+    st.sidebar.write("로그인 페이지로 이동하세요.")
+   
 
 # 사이드바 메뉴 설정
 #menu = st.sidebar.radio("메뉴", ("메인", "문서", "로그인"))
@@ -75,27 +139,42 @@ elif menu == "회원가입":
 #     st.title("메인 페이지")
 #     st.write("이곳은 메인 페이지입니다. 다양한 정보를 확인할 수 있습니다.")
 
+import streamlit as st
+import sqlite3
 
-
-
-
-# SQLite 데이터베이스 설정
-conn = sqlite3.connect('posts.db')
-c = conn.cursor()
-
-# 테이블 생성 (없을 경우 생성)
-c.execute('''CREATE TABLE IF NOT EXISTS posts (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, content TEXT)''')
-conn.commit()
+# SQLite 데이터베이스 설정 및 테이블 초기화
+def init_db():
+    conn = sqlite3.connect("posts.db")
+    c = conn.cursor()
+    # 테이블 생성 (없을 경우 생성)
+    c.execute('''CREATE TABLE IF NOT EXISTS posts (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    title TEXT NOT NULL,
+                    content TEXT NOT NULL,
+                    author TEXT NOT NULL
+                 )''')
+    conn.commit()
+    conn.close()
 
 # 게시글 작성 함수
-def create_post(title, content):
-    c.execute('INSERT INTO posts (title, content) VALUES (?, ?)', (title, content))
+def create_post(title, content, author):
+    conn = sqlite3.connect("posts.db")
+    c = conn.cursor()
+    c.execute('INSERT INTO posts (title, content, author) VALUES (?, ?, ?)', (title, content, author))
     conn.commit()
+    conn.close()
 
 # 게시글 불러오기 함수
 def get_posts():
+    conn = sqlite3.connect("posts.db")
+    c = conn.cursor()
     c.execute('SELECT * FROM posts')
-    return c.fetchall()
+    posts = c.fetchall()
+    conn.close()
+    return posts
+
+# 데이터베이스 초기화
+init_db()
 
 # Streamlit 앱 구성
 st.title("게시판 웹사이트")
@@ -105,33 +184,31 @@ choice = st.sidebar.selectbox("메뉴 선택", menu)
 
 if choice == "게시글 작성":
     st.subheader("새 게시글 작성")
+    author = st.text_input("작성자 아이디")  # 작성자 아이디 입력란 추가
     title = st.text_input("제목")
     content = st.text_area("내용")
     if st.button("게시글 올리기"):
-        if title and content:
-            create_post(title, content)
+        if author and title and content:
+            create_post(title, content, author)
             st.success("게시글이 성공적으로 등록되었습니다!")
         else:
-            st.error("제목과 내용을 모두 입력해주세요.")
+            st.error("작성자 아이디, 제목, 내용 모두 입력해주세요.")
 
 elif choice == "게시글 열람":
     st.subheader("게시글 목록")
     posts = get_posts()
     if posts:
         for post in posts:
-            st.markdown(f"### {post[1]}")
-            st.write(post[2])
+            st.markdown(f"### {post[1]} (작성자: {post[3]})")  # 제목과 작성자 아이디 함께 출력
+            st.write(post[2])  # 게시글 내용
             st.markdown("---")
     else:
         st.write("아직 등록된 게시글이 없습니다.")
 
-# 데이터베이스 연결 종료
-conn.close()
 
 
 
 
-import json
 
 # 사용자 정보 저장 파일
 USER_DATA_FILE = "user_data.json"
@@ -143,89 +220,6 @@ try:
 except FileNotFoundError:
     users = {}
 
-# 회원가입 함수
-def signup(username, password):
-    if username in users:
-        return False, "이미 존재하는 아이디입니다."
-    else:
-        users[username] = password
-        with open(USER_DATA_FILE, "w") as f:
-            json.dump(users, f)
-        return True, "회원가입에 성공했습니다."
-
-# 로그인 함수
-def login(username, password):
-    if username in users and users[username] == password:
-        st.session_state.logged_in = True
-        st.session_state.username = username
-        return True, "로그인에 성공했습니다."
-    else:
-        return False, "아이디 또는 비밀번호가 잘못되었습니다."
-
-# 로그아웃 함수
-def logout():
-    st.session_state.logged_in = False
-    st.session_state.username = ""
-
-# 로그인 상태 초기화
-if "logged_in" not in st.session_state:
-    st.session_state.logged_in = False
-if "username" not in st.session_state:
-    st.session_state.username = ""
-
-# 사이드바 메뉴 설정
-
-
-# 사이드바에 로그인 상태 표시
-if st.session_state.logged_in:
-    st.sidebar.write(f"{st.session_state.username}님 환영합니다!")
-    if st.sidebar.button("로그아웃"):
-        logout()
-        st.rerun()  # 로그아웃 후 페이지 새로고침
-else:
-    st.sidebar.write("로그인 페이지로 이동하세요.")
-
-# 메인 페이지
-
-
-def create_database():
-    # SQLite 데이터베이스 연결 및 테이블 생성
-    conn = sqlite3.connect("user_data.db")
-    c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS user_data (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    name TEXT,
-                    age INTEGER,
-                    education TEXT,
-                    hobby TEXT
-                )''')
-    conn.commit()
-    conn.close()
-
-def get_all_users():
-    # 모든 사용자 데이터 가져오기
-    conn = sqlite3.connect("user_data.db")
-    c = conn.cursor()
-    c.execute("SELECT * FROM user_data")
-    users = c.fetchall()
-    conn.close()
-    return users
-
-def add_user_to_db(name, age, education, hobby):
-    # 사용자 데이터 추가
-    conn = sqlite3.connect("user_data.db")
-    c = conn.cursor()
-    c.execute("INSERT INTO user_data (name, age, education, hobby) VALUES (?, ?, ?, ?)", (name, age, education, hobby))
-    conn.commit()
-    conn.close()
-
-def update_user_in_db(user_id, name, age, education, hobby):
-    # 사용자 데이터 업데이트
-    conn = sqlite3.connect("user_data.db")
-    c = conn.cursor()
-    c.execute("UPDATE user_data SET name = ?, age = ?, education = ?, hobby = ? WHERE id = ?", (name, age, education, hobby, user_id))
-    conn.commit()
-    conn.close()
 
 
 #============================== 문서 데이터베이스
@@ -256,8 +250,7 @@ def add_chat_message(username, message):
 
 # Streamlit 애플리케이션 설정
 def main():
-   
-
+    
     # 채팅 위젯
     with st.sidebar.expander("익명 채팅", expanded=True):
         # 사용자 이름 설정
@@ -283,4 +276,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
