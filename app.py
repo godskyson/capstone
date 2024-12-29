@@ -11,7 +11,7 @@ st.write("숫자를 뽑으세요")
 
 if st.button("숫자 고르기"):
     num = random.randrange(1, 11)
-    st.write(number)
+    st.write(num)
 
 
 # st.header('st.write에 대한 연습')
