@@ -9,8 +9,9 @@ import random
 st.header("랜덤 숫자 뽑기")
 st.write("숫자를 뽑으세요")
 
-number.random(1,11)
-st.write(number)
+if st.button("숫자 고르기"):
+    num = random.randrange(1, 11)
+    st.write(number)
 
 
 # st.header('st.write에 대한 연습')
