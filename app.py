@@ -11,7 +11,7 @@ st.write("숫자를 뽑으세요")
 
 gift = ['배민 상품권', 'CJ 상품권', '스타벅스상품권']
 if st.button("숫자 고르기"):
-    num = random(gift)
+    num = random.randrange(1, 11)
     st.write(num)
 
 
