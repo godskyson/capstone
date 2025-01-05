@@ -13,6 +13,7 @@ gift = {
     0: '배민 상품권', 
     1: 'CJ 상품권', 
     2: '스타벅스상품권'
+    3: '이디야 상품권'
 }
 if st.button("숫자 고르기"):
     num = random.randrange(0, 3)
