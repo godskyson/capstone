@@ -18,7 +18,7 @@ gift = {
 if st.button("숫자 고르기"):
     num = random.randrange(0, 4)
     result = gift.get(num)
-    st.ballons()
+    st.balloons()
     st.header(f"{result} 당첨!🎉")
 
 # st.header('st.write에 대한 연습')
