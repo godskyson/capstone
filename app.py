@@ -6,8 +6,8 @@ from datetime import time, datetime
 import random
 
 
-st.header("랜덤 숫자 뽑기")
-st.write("숫자를 뽑으세요")
+st.header("생일 선물 뽑기")
+st.write("버튼을 누르세요.")
 
 gift = {
     0: '배민 상품권', 
